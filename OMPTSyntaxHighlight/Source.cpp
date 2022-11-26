@@ -87,24 +87,14 @@ int main(int argc, char* argv[])
 	
 	std::string Input;
 	std::vector<std::string> Lines;
-	size_t LineLength = 0;
 	if (Options.USE_STDIN)
 	{
+
 		std::string Line;
 		while (std::getline(std::cin, Line))
 		{
 			Lines.push_back(Line);
-			if (Line == "")
-			{
-				std::getline(std::cin, Line);
-				if (Line == "") break;
-				Lines.push_back(Line);
-			}
-
-			if (Lines.size() == 2)
-			{
-				LineLength = Line.length();
-			}
+			if (Line == "") break;
 		}
 
 		for (int i = 0; i < Lines.size(); i++)
@@ -136,9 +126,7 @@ int main(int argc, char* argv[])
 		GlobalUnlock(hData);
 		CloseClipboard();
 	}
-
-	std::cout << LineLength << std::endl;
-
+	
 	std::string Format;
 	Format = Input.substr(HEADER.length(), 3);
 	if (!(std::find(FORMATS_M.begin(), FORMATS_M.end(), Format) != FORMATS_M.end() || std::find(FORMATS_S.begin(), FORMATS_S.end(), Format) != FORMATS_S.end()))
