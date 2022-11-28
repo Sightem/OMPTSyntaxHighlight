@@ -4,7 +4,8 @@
 #include <exception>
 #include <sstream>
 #include <regex>
-#include <Windows.h>
+
+#include "clipboardxx.hpp"
 
 struct CLIOptions
 {
@@ -110,26 +111,9 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		if (!OpenClipboard(NULL))
-		{
-			std::cout << "Failed to open clipboard";
-			return 1;
-		}
-		HANDLE hData = GetClipboardData(CF_TEXT);
-		if (hData == NULL)
-		{
-			std::cout << "Failed to get clipboard data";
-			return 1;
-		}
-		char* pszText = static_cast<char*>(GlobalLock(hData));
-		if (pszText == NULL)
-		{
-			std::cout << "Failed to lock clipboard data";
-			return 1;
-		}
-		Input = pszText;
-		GlobalUnlock(hData);
-		CloseClipboard();
+		clipboardxx::clipboard clipboard;
+
+		clipboard >> Input;
 	}
 	
 	std::string Format;
@@ -189,24 +173,9 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		if (!OpenClipboard(NULL))
-		{
-			std::cout << "Failed to open clipboard";
-			return 1;
-		}
-		EmptyClipboard();
-		HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, Output.size() + 1);
-		if (!hg)
-		{
-			CloseClipboard();
-			std::cout << "Failed to allocate memory";
-			return 1;
-		}
-		memcpy(GlobalLock(hg), Output.c_str(), Output.size() + 1);
-		GlobalUnlock(hg);
-		SetClipboardData(CF_TEXT, hg);
-		CloseClipboard();
-		GlobalFree(hg);
+		clipboardxx::clipboard clipboard;
+		
+		clipboard << Output;
 	}
 }
 
