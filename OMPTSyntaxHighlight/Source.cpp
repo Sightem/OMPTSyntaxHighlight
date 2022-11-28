@@ -246,7 +246,17 @@ int GetEffectCmdColor(char c, std::string f)
 	int color = 0;
 	if (std::find(FORMATS_S.begin(), FORMATS_S.end(), f) != FORMATS_S.end())
 	{
-		//do this later
+		if (c == 'D' || c == 'K' || c == 'L' || c == 'M' || c == 'N' || c == 'R') color = 3;
+		else if (c == 'P' || c == 'X' || c == 'Y') color = 4;
+		else if (c == 'E' || c == 'F' || c == 'G' || c == 'H' || c == 'U' || c == '+' || c == '*') color = 5;
+		else if (c == 'A' || c == 'B' || c == 'C' || c == 'T' || c == 'V' || c == 'W') color = 6;
+	}
+	else if (std::find(FORMATS_M.begin(), FORMATS_M.end(), f) != FORMATS_M.end())
+	{
+		if (c == '5' || c == '6' || c == '7' || c == 'A' || c == 'C') color = 3;
+		else if (c == '8' || c == 'P' || c == 'Y') color = 4;
+		else if (c == '1' || c == '2' || c == '3' || c == '4' || c == 'X') color = 5;
+		else if (c == 'B' || c == 'D' || c == 'F' || c == 'G' || c == 'H') color = 6;
 	}
 	
 	return color;
