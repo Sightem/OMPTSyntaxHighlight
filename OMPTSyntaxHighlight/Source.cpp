@@ -42,6 +42,13 @@ std::vector<std::string> FORMATS_S = { "S3M", " IT", "MPT" };
 bool StartsWith(const char* pre, const char* str);
 CLIOptions ParseCommandLine(int argc, char* argv[]);
 std::vector<std::string> Split(const std::string& s, char delimiter);
+int GetEffectCmdColor(char c, std::string f);
+int GetVolumeCmdColor(char c);
+int GetInstrumentColor(char c);
+int GetNoteColor(char c);
+std::string GetSGRCode(int color);
+bool isWhitespace(char c);
+
 
 int main(int argc, char* argv[])
 {
@@ -61,7 +68,6 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	//diabolical code ahead
 	int Colors[8];
 	try
 	{
@@ -84,7 +90,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	
 	std::string Input;
 	std::vector<std::string> Lines;
 	if (Options.USE_STDIN)
@@ -137,16 +142,72 @@ int main(int argc, char* argv[])
 	
 	Input = std::regex_replace(Input, std::regex("\u001B\\[\\d+(;\\d+)*m"), "");
 
-	std::cout << Input << std::endl;
-
 	
+	std::string Output;
+	if (!Options.REVERSE_MODE)
+	{
+		std::string resultbuilder;
+		int RelPos = -1;
+		int Color = -1;
+		int PreviousColor = -1;
+		
+		for (int i = 0; i < Input.length(); i++)
+		{
+			char c = Input[i];
+			if (c == '|') RelPos = 0;
 
-	std::cout << "HELP: " << Options.HELP << std::endl;
-	std::cout << "USE_STDIN: " << Options.USE_STDIN << std::endl;
-	std::cout << "USE_STDOUT: " << Options.USE_STDOUT << std::endl;
-	std::cout << "AUTO_MARKDOWN: " << Options.AUTO_MARKDOWN << std::endl;
-	std::cout << "REVERSE_MODE: " << Options.REVERSE_MODE << std::endl;
+			if (RelPos == 0) Color = Colors[7];
+			if (RelPos == 1) Color = Colors[GetNoteColor(c)];
+			if (RelPos == 4) Color = Colors[GetInstrumentColor(c)];
+			if (RelPos == 6) Color = Colors[GetVolumeCmdColor(c)];
 
+			if (RelPos >= 9)
+			{
+				if (RelPos % 3 == 0) Color = Colors[GetEffectCmdColor(c, Format)];
+				if (RelPos % 3 != 0 && c == '.' && Input[i - (RelPos % 3)] != '.') c = '0';
+			}
+
+			if (!isWhitespace(c))
+			{
+				if (Color != PreviousColor) resultbuilder += GetSGRCode(Color);
+				PreviousColor = Color;
+			}
+
+			resultbuilder += c;
+			if (RelPos >= 0) RelPos++;
+		}
+		
+		Output = resultbuilder;
+	}
+	else Output = Input;
+
+	if (Options.AUTO_MARKDOWN && !Options.REVERSE_MODE) Output = "```ansi" + '\n' + Output + "```";
+
+	if (Options.USE_STDOUT)
+	{
+		std::cout << Output;
+	}
+	else
+	{
+		if (!OpenClipboard(NULL))
+		{
+			std::cout << "Failed to open clipboard";
+			return 1;
+		}
+		EmptyClipboard();
+		HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, Output.size() + 1);
+		if (!hg)
+		{
+			CloseClipboard();
+			std::cout << "Failed to allocate memory";
+			return 1;
+		}
+		memcpy(GlobalLock(hg), Output.c_str(), Output.size() + 1);
+		GlobalUnlock(hg);
+		SetClipboardData(CF_TEXT, hg);
+		CloseClipboard();
+		GlobalFree(hg);
+	}
 }
 
 bool StartsWith(const char* pre, const char* str)
@@ -226,6 +287,11 @@ std::vector<std::string> Split(const std::string& s, char delimiter)
 	return tokens;
 }
 
+bool isWhitespace(char c)
+{
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
+}
+
 std::string GetSGRCode(int color)
 {
 	int n = color + ((color < 8) ? 30 : 82);
@@ -237,8 +303,20 @@ int GetNoteColor(char c)
 	return (c >= 'A' && c <= 'G') ? 1 : 0;
 }
 
-int GetInstrumentColor(char c) {
+int GetInstrumentColor(char c) 
+{
 	return c >= '0' ? 2 : 0;
+}
+
+int GetVolumeCmdColor(char c)
+{
+	int color = 0;
+	
+	if (c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'v') color = 3;
+	if (c == 'l' || c == 'p' || c == 'r') color = 4;
+	if (c == 'e' || c == 'f' || c == 'g' || c == 'h' || c == 'u') color = 5;
+
+	return color;
 }
 
 int GetEffectCmdColor(char c, std::string f) 
