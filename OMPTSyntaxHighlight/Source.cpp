@@ -51,12 +51,13 @@ bool StartsWith(const char* pre, const char* str);
 int main(int argc, char* argv[])
 {
 	int ColorArgIndex = 0;
-	while (ColorArgIndex < argc)
+	
+	//find the last provided argument and set its index as the color argument index
+	for (int i = 1; i < argc; i++)
 	{
-		ColorArgIndex++;
-		if (argv[ColorArgIndex][0] != '-')
+		if (argv[i][0] != '-')
 		{
-			break;
+			ColorArgIndex = i;
 		}
 	}
 
