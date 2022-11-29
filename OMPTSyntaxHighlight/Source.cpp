@@ -191,7 +191,7 @@ CLIOptions ParseCommandLine(int argc, char* argv[])
 			if (strcmp(argv[i], "--help") == 0)					options.HELP = true;
 			else if (strcmp(argv[i], "--stdin") == 0)			options.USE_STDIN = true;
 			else if (strcmp(argv[i], "--stdout") == 0)			options.USE_STDOUT = true;
-			else if (strcmp(argv[i], "--auto-markdown") == 0)	options.AUTO_MARKDOWN = true;
+			else if (strcmp(argv[i], "--markdown") == 0)		options.AUTO_MARKDOWN = true;
 			else if (strcmp(argv[i], "--reverse") == 0)			options.REVERSE_MODE = true;
 
 		}
