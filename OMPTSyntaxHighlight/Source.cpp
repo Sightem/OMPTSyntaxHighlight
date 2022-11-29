@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 		for (int i = 0; i < ColorArgs.size(); i++)
 		{
 			Colors[i] = std::stoi(ColorArgs[i]);
-			if (Colors[i] < 0 || Colors[i] > 15) throw std::exception("Color value out of range");
+			if (Colors[i] < 0 || Colors[i] > 15) throw std::logic_error("Color value out of range");
 		}
 	}
 	catch (std::exception e)
@@ -204,7 +204,6 @@ CLIOptions ParseCommandLine(int argc, char* argv[])
 				else if (argv[i][j] == 'o')						options.USE_STDOUT = true;
 				else if (argv[i][j] == 'm')						options.AUTO_MARKDOWN = true;
 				else if (argv[i][j] == 'r')						options.REVERSE_MODE = true;
-
 			}
 		}
 	}
