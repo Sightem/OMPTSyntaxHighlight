@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 {
 	int ColorArgIndex = 0;
 	
-	//find the last provided argument and set its index as the color argument index
+	// Find the last provided argument and set its index as the color argument index
 	for (int i = 1; i < argc; i++)
 	{
 		if (argv[i][0] != '-')
@@ -61,14 +61,17 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	// Parse the cli options
 	CLIOptions Options = ParseCommandLine(argc, argv);
 	
+	// Show help (and then exit) if the help option is provided
 	if (Options.HELP)
 	{
 		std::cout << HELP_MESSAGE;
 		return 0;
 	}
 
+	// Use the first non-option command-line argument as the list of colors
 	int Colors[8];
 	try
 	{
@@ -91,6 +94,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	// Read clipboard/STDIN
 	std::string Input;
 	std::vector<std::string> Lines;
 	if (Options.USE_STDIN)
@@ -115,6 +119,7 @@ int main(int argc, char* argv[])
 		clipboard >> Input;
 	}
 	
+	// Try to get the module format and check if the data is valid OpenMPT pattern data
 	std::string Format;
 	Format = Input.substr(HEADER.length(), 3);
 	if (!(std::find(FORMATS_M.begin(), FORMATS_M.end(), Format) != FORMATS_M.end() || std::find(FORMATS_S.begin(), FORMATS_S.end(), Format) != FORMATS_S.end()))
@@ -123,8 +128,10 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 	
+	// Remove colors if the input is already syntax-highlighted
 	Input = std::regex_replace(Input, std::regex("\u001B\\[\\d+(;\\d+)*m"), "");
 
+	// Add colors if reverse mode is not enabled
 	std::string Output;
 	if (!Options.REVERSE_MODE)
 	{
@@ -163,8 +170,10 @@ int main(int argc, char* argv[])
 	}
 	else Output = Input;
 
+	// Wrap in code block for Discord if specified
 	if (Options.AUTO_MARKDOWN && !Options.REVERSE_MODE) Output = "```ansi\n" +  Output + "```";
 
+	// Write to clipboard/STDOUT
 	if (Options.USE_STDOUT)
 	{
 		std::cout << Output;
