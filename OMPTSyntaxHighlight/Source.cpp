@@ -55,10 +55,7 @@ int main(int argc, char* argv[])
 	// Find the last provided argument and set its index as the color argument index
 	for (int i = 1; i < argc; i++)
 	{
-		if (argv[i][0] != '-')
-		{
-			ColorArgIndex = i;
-		}
+		if (argv[i][0] != '-') ColorArgIndex = i;
 	}
 
 	// Parse the cli options
@@ -79,10 +76,7 @@ int main(int argc, char* argv[])
 		for (int i = 0; i < ColorArgs.size(); i++)
 		{
 			Colors[i] = std::stoi(ColorArgs[i]);
-			if (Colors[i] < 0 || Colors[i] > 15)
-			{
-				throw std::exception("Color value out of range");
-			}
+			if (Colors[i] < 0 || Colors[i] > 15) throw std::exception("Color value out of range");
 		}
 	}
 	catch (std::exception e)
@@ -115,7 +109,6 @@ int main(int argc, char* argv[])
 	else
 	{
 		clipboardxx::clipboard clipboard;
-
 		clipboard >> Input;
 	}
 	
@@ -174,22 +167,17 @@ int main(int argc, char* argv[])
 	if (Options.AUTO_MARKDOWN && !Options.REVERSE_MODE) Output = "```ansi\n" +  Output + "```";
 
 	// Write to clipboard/STDOUT
-	if (Options.USE_STDOUT)
-	{
-		std::cout << Output;
-	}
+	if (Options.USE_STDOUT) std::cout << Output;
 	else
 	{
 		clipboardxx::clipboard clipboard;
-		
 		clipboard << Output;
 	}
 }
 
 bool StartsWith(const char* pre, const char* str)
 {
-	size_t lenpre = strlen(pre),
-		lenstr = strlen(str);
+	size_t lenpre = strlen(pre), lenstr = strlen(str);
 	return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
 
@@ -200,51 +188,23 @@ CLIOptions ParseCommandLine(int argc, char* argv[])
 	{
 		if (StartsWith("--", argv[i]))
 		{
-			if (strcmp(argv[i], "--help") == 0)
-			{
-				options.HELP = true;
-			}
-			else if (strcmp(argv[i], "--stdin") == 0)
-			{
-				options.USE_STDIN = true;
-			}
-			else if (strcmp(argv[i], "--stdout") == 0)
-			{
-				options.USE_STDOUT = true;
-			}
-			else if (strcmp(argv[i], "--auto-markdown") == 0)
-			{
-				options.AUTO_MARKDOWN = true;
-			}
-			else if (strcmp(argv[i], "--reverse") == 0)
-			{
-				options.REVERSE_MODE = true;
-			}
+			if (strcmp(argv[i], "--help") == 0)					options.HELP = true;
+			else if (strcmp(argv[i], "--stdin") == 0)			options.USE_STDIN = true;
+			else if (strcmp(argv[i], "--stdout") == 0)			options.USE_STDOUT = true;
+			else if (strcmp(argv[i], "--auto-markdown") == 0)	options.AUTO_MARKDOWN = true;
+			else if (strcmp(argv[i], "--reverse") == 0)			options.REVERSE_MODE = true;
+
 		}
 		else if (StartsWith("-", argv[i]))
 		{
 			for (int j = 1; j < strlen(argv[i]); j++)
 			{
-				if (argv[i][j] == 'h')
-				{
-					options.HELP = true;
-				}
-				else if (argv[i][j] == 'i')
-				{
-					options.USE_STDIN = true;
-				}
-				else if (argv[i][j] == 'o')
-				{
-					options.USE_STDOUT = true;
-				}
-				else if (argv[i][j] == 'm')
-				{
-					options.AUTO_MARKDOWN = true;
-				}
-				else if (argv[i][j] == 'r')
-				{
-					options.REVERSE_MODE = true;
-				}
+				if (argv[i][j] == 'h')							options.HELP = true;
+				else if (argv[i][j] == 'i')						options.USE_STDIN = true;
+				else if (argv[i][j] == 'o')						options.USE_STDOUT = true;
+				else if (argv[i][j] == 'm')						options.AUTO_MARKDOWN = true;
+				else if (argv[i][j] == 'r')						options.REVERSE_MODE = true;
+
 			}
 		}
 	}
@@ -270,8 +230,7 @@ bool isWhitespace(char c)
 
 std::string GetSGRCode(int color)
 {
-	int n = color + ((color < 8) ? 30 : 82);
-	return "\u001B[" + std::to_string(n) + "m";
+	return "\u001B[" + std::to_string(color + ((color < 8) ? 30 : 82)) + "m";
 }
 
 int GetNoteColor(char c)
@@ -289,7 +248,7 @@ int GetVolumeCmdColor(char c)
 	int color = 0;
 	
 	if (c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'v') color = 3;
-	if (c == 'l' || c == 'p' || c == 'r') color = 4;
+	if (c == 'l' || c == 'p' || c == 'r')						  color = 4;
 	if (c == 'e' || c == 'f' || c == 'g' || c == 'h' || c == 'u') color = 5;
 
 	return color;
@@ -300,17 +259,17 @@ int GetEffectCmdColor(char c, std::string f)
 	int color = 0;
 	if (std::find(FORMATS_S.begin(), FORMATS_S.end(), f) != FORMATS_S.end())
 	{
-		if (c == 'D' || c == 'K' || c == 'L' || c == 'M' || c == 'N' || c == 'R') color = 3;
-		else if (c == 'P' || c == 'X' || c == 'Y') color = 4;
-		else if (c == 'E' || c == 'F' || c == 'G' || c == 'H' || c == 'U' || c == '+' || c == '*') color = 5;
-		else if (c == 'A' || c == 'B' || c == 'C' || c == 'T' || c == 'V' || c == 'W') color = 6;
+		if (c == 'D' || c == 'K' || c == 'L' || c == 'M' || c == 'N' || c == 'R')					color = 3;
+		else if (c == 'P' || c == 'X' || c == 'Y')													color = 4;
+		else if (c == 'E' || c == 'F' || c == 'G' || c == 'H' || c == 'U' || c == '+' || c == '*')	color = 5;
+		else if (c == 'A' || c == 'B' || c == 'C' || c == 'T' || c == 'V' || c == 'W')				color = 6;
 	}
 	else if (std::find(FORMATS_M.begin(), FORMATS_M.end(), f) != FORMATS_M.end())
 	{
-		if (c == '5' || c == '6' || c == '7' || c == 'A' || c == 'C') color = 3;
-		else if (c == '8' || c == 'P' || c == 'Y') color = 4;
-		else if (c == '1' || c == '2' || c == '3' || c == '4' || c == 'X') color = 5;
-		else if (c == 'B' || c == 'D' || c == 'F' || c == 'G' || c == 'H') color = 6;
+		if (c == '5' || c == '6' || c == '7' || c == 'A' || c == 'C')		color = 3;
+		else if (c == '8' || c == 'P' || c == 'Y')							color = 4;
+		else if (c == '1' || c == '2' || c == '3' || c == '4' || c == 'X')	color = 5;
+		else if (c == 'B' || c == 'D' || c == 'F' || c == 'G' || c == 'H')	color = 6;
 	}
 	
 	return color;
