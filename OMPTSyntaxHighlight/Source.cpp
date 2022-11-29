@@ -4,7 +4,6 @@
 #include <exception>
 #include <sstream>
 #include <regex>
-
 #include "clipboardxx.hpp"
 
 struct CLIOptions
@@ -39,26 +38,26 @@ const std::string HEADER = "ModPlug Tracker ";
 std::vector<std::string> FORMATS_M = { "MOD", " XM" };
 std::vector<std::string> FORMATS_S = { "S3M", " IT", "MPT" };
 
-
-bool StartsWith(const char* pre, const char* str);
 CLIOptions ParseCommandLine(int argc, char* argv[]);
 std::vector<std::string> Split(const std::string& s, char delimiter);
+std::string GetSGRCode(int color);
 int GetEffectCmdColor(char c, std::string f);
 int GetVolumeCmdColor(char c);
 int GetInstrumentColor(char c);
 int GetNoteColor(char c);
-std::string GetSGRCode(int color);
 bool isWhitespace(char c);
-
+bool StartsWith(const char* pre, const char* str);
 
 int main(int argc, char* argv[])
 {
 	int ColorArgIndex = 0;
 	while (ColorArgIndex < argc)
 	{
-		if (!StartsWith("-", argv[ColorArgIndex])) break;
 		ColorArgIndex++;
-		if (StartsWith("--", argv[ColorArgIndex - 1])) break;
+		if (argv[ColorArgIndex][0] != '-')
+		{
+			break;
+		}
 	}
 
 	CLIOptions Options = ParseCommandLine(argc, argv);
@@ -84,7 +83,7 @@ int main(int argc, char* argv[])
 	}
 	catch (std::exception e)
 	{
-		if (!Options.USE_STDOUT) std::cout << "Colors not provided properly. Default colors will be used.";
+		if (!Options.USE_STDOUT) std::cout << e.what() << std::endl;
 		for (int i = 0; i < 8; i++)
 		{
 			Colors[i] = DEFAULT_COLORS[i];
@@ -95,7 +94,6 @@ int main(int argc, char* argv[])
 	std::vector<std::string> Lines;
 	if (Options.USE_STDIN)
 	{
-
 		std::string Line;
 		while (std::getline(std::cin, Line))
 		{
@@ -126,7 +124,6 @@ int main(int argc, char* argv[])
 	
 	Input = std::regex_replace(Input, std::regex("\u001B\\[\\d+(;\\d+)*m"), "");
 
-	
 	std::string Output;
 	if (!Options.REVERSE_MODE)
 	{
@@ -165,7 +162,7 @@ int main(int argc, char* argv[])
 	}
 	else Output = Input;
 
-	if (Options.AUTO_MARKDOWN && !Options.REVERSE_MODE) Output = "```ansi" + '\n' + Output + "```";
+	if (Options.AUTO_MARKDOWN && !Options.REVERSE_MODE) Output = "```ansi\n" +  Output + "```";
 
 	if (Options.USE_STDOUT)
 	{
