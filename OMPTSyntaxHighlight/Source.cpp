@@ -247,9 +247,12 @@ int GetVolumeCmdColor(char c)
 {
 	int color = 0;
 	
-	if (c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'v') color = 3;
-	if (c == 'l' || c == 'p' || c == 'r')						  color = 4;
-	if (c == 'e' || c == 'f' || c == 'g' || c == 'h' || c == 'u') color = 5;
+	switch (c)
+	{
+		case 'a': case 'b': case 'c': case 'd': case 'v': color = 3; break;
+		case 'l': case 'p': case 'r': color = 4; break;
+		case 'e': case 'f': case 'g': case 'h': case 'u': color = 5; break;
+	}
 
 	return color;
 }
@@ -269,13 +272,6 @@ int GetEffectCmdColor(char c, std::string f)
 	}
 	else if (std::find(FORMATS_M.begin(), FORMATS_M.end(), f) != FORMATS_M.end())
 	{
-		/*
-		if (c == '5' || c == '6' || c == '7' || c == 'A' || c == 'C')		color = 3;
-		else if (c == '8' || c == 'P' || c == 'Y')							color = 4;
-		else if (c == '1' || c == '2' || c == '3' || c == '4' || c == 'X')	color = 5;
-		else if (c == 'B' || c == 'D' || c == 'F' || c == 'G' || c == 'H')	color = 6;
-		*/
-		
 		switch (c)
 		{
 			case '5': case '6': case '7': case 'A': case 'C': color = 3; break;
