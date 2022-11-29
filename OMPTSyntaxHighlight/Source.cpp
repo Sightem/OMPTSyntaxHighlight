@@ -4,6 +4,7 @@
 #include <exception>
 #include <sstream>
 #include <regex>
+#include <cstring>
 #include "clipboardxx.hpp"
 
 struct CLIOptions
