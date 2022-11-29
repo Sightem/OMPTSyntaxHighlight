@@ -259,17 +259,30 @@ int GetEffectCmdColor(char c, std::string f)
 	int color = 0;
 	if (std::find(FORMATS_S.begin(), FORMATS_S.end(), f) != FORMATS_S.end())
 	{
-		if (c == 'D' || c == 'K' || c == 'L' || c == 'M' || c == 'N' || c == 'R')					color = 3;
-		else if (c == 'P' || c == 'X' || c == 'Y')													color = 4;
-		else if (c == 'E' || c == 'F' || c == 'G' || c == 'H' || c == 'U' || c == '+' || c == '*')	color = 5;
-		else if (c == 'A' || c == 'B' || c == 'C' || c == 'T' || c == 'V' || c == 'W')				color = 6;
+		switch (c)
+		{
+			case 'D': case 'K': case 'L': case 'M': case 'N': case 'R': color = 3; break;
+			case 'P': case 'X': case 'Y': color = 4; break;
+			case 'E': case 'F': case 'G': case 'H': case 'U': case '+': case '*': color = 5; break;
+			case 'A': case 'B': case 'C': case 'T': case 'V': case 'W': color = 6; break;
+		}
 	}
 	else if (std::find(FORMATS_M.begin(), FORMATS_M.end(), f) != FORMATS_M.end())
 	{
+		/*
 		if (c == '5' || c == '6' || c == '7' || c == 'A' || c == 'C')		color = 3;
 		else if (c == '8' || c == 'P' || c == 'Y')							color = 4;
 		else if (c == '1' || c == '2' || c == '3' || c == '4' || c == 'X')	color = 5;
 		else if (c == 'B' || c == 'D' || c == 'F' || c == 'G' || c == 'H')	color = 6;
+		*/
+		
+		switch (c)
+		{
+			case '5': case '6': case '7': case 'A': case 'C': color = 3; break;
+			case '8': case 'P': case 'Y': color = 4; break;
+			case '1': case '2': case '3': case '4': case 'X': color = 5; break;
+			case 'B': case 'D': case 'F': case 'G': case 'H': color = 6; break;
+		}
 	}
 	
 	return color;
