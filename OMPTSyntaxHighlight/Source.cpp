@@ -4,6 +4,7 @@
 #include <exception>
 #include <sstream>
 #include <regex>
+#include <array>
 #include <cstring>
 #include "clipboardxx.hpp"
 
@@ -16,7 +17,7 @@ struct CLIOptions
 	bool REVERSE_MODE = false;
 };
 
-const std::string HELP_MESSAGE =
+constexpr std::string_view HELP_MESSAGE =
 "Usage: [EXEC] [OPTIONS] [COLORS]                                              \n"
 "                                                                              \n"
 "Options:                                                                      \n"
@@ -34,20 +35,20 @@ const std::string HELP_MESSAGE =
 "format: Default,Note,Instrument,Volume,Panning,Pitch,Global,ChannelSeparator  \n"
 "if not provided: 7,5,4,2,6,3,1,7                                              \n";
 
-const int DEFAULT_COLORS[] = { 7, 5, 4, 2, 6, 3, 1, 7 };
-const std::string HEADER = "ModPlug Tracker ";
-std::vector<std::string> FORMATS_M = { "MOD", " XM" };
-std::vector<std::string> FORMATS_S = { "S3M", " IT", "MPT" };
+constexpr std::array DEFAULT_COLORS = { 7, 5, 4, 2, 6, 3, 1, 7 };
+constexpr std::string_view HEADER = "ModPlug Tracker ";
+constexpr std::array<std::string_view, 2> FORMATS_M = { "MOD", " XM" };
+constexpr std::array<std::string_view, 3>  FORMATS_S = { "S3M", " IT", "MPT" };
 
 CLIOptions ParseCommandLine(int argc, char* argv[]);
-std::vector<std::string> Split(const std::string& s, char delimiter);
+std::vector<std::string> Split(std::string_view s, char delimiter);
 std::string GetSGRCode(int color);
-int GetEffectCmdColor(char c, std::string f);
+int GetEffectCmdColor(char c, std::string_view f);
 int GetVolumeCmdColor(char c);
 int GetInstrumentColor(char c);
 int GetNoteColor(char c);
 bool isWhitespace(char c);
-bool StartsWith(const char* pre, const char* str);
+bool StartsWith(std::string_view pre, std::string_view str);
 
 int main(int argc, char* argv[])
 {
@@ -60,29 +61,31 @@ int main(int argc, char* argv[])
 	}
 
 	// Parse the cli options
-	CLIOptions Options = ParseCommandLine(argc, argv);
-	
+	auto [HELP, USE_STDIN, USE_STDOUT, AUTO_MARKDOWN, REVERSE_MODE] = ParseCommandLine(argc, argv);
+
 	// Show help (and then exit) if the help option is provided
-	if (Options.HELP)
+	if (HELP)
 	{
 		std::cout << HELP_MESSAGE;
 		return 0;
 	}
 
 	// Use the first non-option command-line argument as the list of colors
-	int Colors[8];
+	std::array<int, 8> Colors{};
 	try
 	{
-		std::vector<std::string> ColorArgs = Split(argv[ColorArgIndex], ',');
+		const std::vector<std::string> ColorArgs = Split(argv[ColorArgIndex], ',');
 		for (int i = 0; i < ColorArgs.size(); i++)
 		{
 			Colors[i] = std::stoi(ColorArgs[i]);
-			if (Colors[i] < 0 || Colors[i] > 15) throw std::logic_error("Color value out of range");
+			if (Colors[i] < 0 || Colors[i] > 15)
+				throw std::logic_error("Color value out of range");
 		}
 	}
-	catch (std::exception e)
+	catch (const std::exception& e)
 	{
-		if (!Options.USE_STDOUT) std::cout << e.what() << std::endl;
+		if (!USE_STDOUT)
+			std::cout << e.what() << std::endl;
 		for (int i = 0; i < 8; i++)
 		{
 			Colors[i] = DEFAULT_COLORS[i];
@@ -91,20 +94,22 @@ int main(int argc, char* argv[])
 
 	// Read clipboard/STDIN
 	std::string Input;
-	std::vector<std::string> Lines;
-	if (Options.USE_STDIN)
+	if (USE_STDIN)
 	{
+		std::vector<std::string> Lines;
 		std::string Line;
 		while (std::getline(std::cin, Line))
 		{
 			Lines.push_back(Line);
-			if (Line == "") break;
+			if (Line.empty())
+				break;
 		}
 
 		for (int i = 0; i < Lines.size(); i++)
 		{
 			Input += Lines[i];
-			if (i != Lines.size() - 1) Input += '\n';
+			if (i != Lines.size() - 1)
+				Input += '\n';
 		}
 	}
 	else
@@ -112,28 +117,27 @@ int main(int argc, char* argv[])
 		clipboardxx::clipboard clipboard;
 		clipboard >> Input;
 	}
-	
+
 	// Try to get the module format and check if the data is valid OpenMPT pattern data
-	std::string Format;
-	Format = Input.substr(HEADER.length(), 3);
-	if (!(std::find(FORMATS_M.begin(), FORMATS_M.end(), Format) != FORMATS_M.end() || std::find(FORMATS_S.begin(), FORMATS_S.end(), Format) != FORMATS_S.end()))
+	const std::string Format = Input.substr(HEADER.length(), 3);
+	if (!(std::ranges::find(FORMATS_M, Format) != FORMATS_M.end() || std::ranges::find(FORMATS_S, Format) != FORMATS_S.end()))
 	{
 		std::cout << "Input does not contain OpenMPT pattern data.";
 		return 2;
 	}
-	
+
 	// Remove colors if the input is already syntax-highlighted
 	Input = std::regex_replace(Input, std::regex("\u001B\\[\\d+(;\\d+)*m"), "");
 
 	// Add colors if reverse mode is not enabled
 	std::string Output;
-	if (!Options.REVERSE_MODE)
+	if (!REVERSE_MODE)
 	{
 		std::string resultbuilder;
 		int RelPos = -1;
 		int Color = -1;
 		int PreviousColor = -1;
-		
+
 		for (int i = 0; i < Input.length(); i++)
 		{
 			char c = Input[i];
@@ -159,16 +163,19 @@ int main(int argc, char* argv[])
 			resultbuilder += c;
 			if (RelPos >= 0) RelPos++;
 		}
-		
+
 		Output = resultbuilder;
 	}
-	else Output = Input;
+	else
+		Output = Input;
 
 	// Wrap in code block for Discord if specified
-	if (Options.AUTO_MARKDOWN && !Options.REVERSE_MODE) Output = "```ansi\n" +  Output + "```";
+	if (AUTO_MARKDOWN && !REVERSE_MODE)
+		Output = "```ansi\n" +  Output + "```";
 
 	// Write to clipboard/STDOUT
-	if (Options.USE_STDOUT) std::cout << Output;
+	if (USE_STDOUT)
+		std::cout << Output;
 	else
 	{
 		clipboardxx::clipboard clipboard;
@@ -176,13 +183,12 @@ int main(int argc, char* argv[])
 	}
 }
 
-bool StartsWith(const char* pre, const char* str)
+inline bool StartsWith(const std::string_view pre, const std::string_view str)
 {
-	size_t lenpre = strlen(pre), lenstr = strlen(str);
-	return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+	return str.substr(0, pre.length()) == pre;
 }
 
-CLIOptions ParseCommandLine(int argc, char* argv[])
+CLIOptions ParseCommandLine(const int argc, char* argv[])
 {
 	CLIOptions options;
 	for (int i = 1; i < argc; i++)
@@ -211,11 +217,11 @@ CLIOptions ParseCommandLine(int argc, char* argv[])
 	return options;
 }
 
-std::vector<std::string> Split(const std::string& s, char delimiter)
+std::vector<std::string> Split(const std::string_view s, const char delimiter)
 {
 	std::vector<std::string> tokens;
 	std::string token;
-	std::istringstream tokenStream(s);
+	std::istringstream tokenStream(s.data());
 	while (std::getline(tokenStream, token, delimiter))
 	{
 		tokens.push_back(token);
@@ -223,27 +229,27 @@ std::vector<std::string> Split(const std::string& s, char delimiter)
 	return tokens;
 }
 
-bool isWhitespace(char c)
+bool isWhitespace(const char c)
 {
-	return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
-std::string GetSGRCode(int color)
+std::string GetSGRCode(const int color)
 {
 	return "\u001B[" + std::to_string(color + ((color < 8) ? 30 : 82)) + "m";
 }
 
-int GetNoteColor(char c)
+int GetNoteColor(const char c)
 {
 	return (c >= 'A' && c <= 'G') ? 1 : 0;
 }
 
-int GetInstrumentColor(char c) 
+int GetInstrumentColor(const char c)
 {
 	return c >= '0' ? 2 : 0;
 }
 
-int GetVolumeCmdColor(char c)
+int GetVolumeCmdColor(const char c)
 {
 	int color = 0;
 	
@@ -257,10 +263,10 @@ int GetVolumeCmdColor(char c)
 	return color;
 }
 
-int GetEffectCmdColor(char c, std::string f) 
+int GetEffectCmdColor(const char c, const std::string_view f)
 {
 	int color = 0;
-	if (std::find(FORMATS_S.begin(), FORMATS_S.end(), f) != FORMATS_S.end())
+	if (std::ranges::find(FORMATS_S, f) != FORMATS_S.end())
 	{
 		switch (c)
 		{
@@ -270,7 +276,7 @@ int GetEffectCmdColor(char c, std::string f)
 			case 'A': case 'B': case 'C': case 'T': case 'V': case 'W': color = 6; break;
 		}
 	}
-	else if (std::find(FORMATS_M.begin(), FORMATS_M.end(), f) != FORMATS_M.end())
+	else if (std::ranges::find(FORMATS_M, f) != FORMATS_M.end())
 	{
 		switch (c)
 		{
